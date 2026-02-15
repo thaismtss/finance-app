@@ -40,9 +40,10 @@ export function DashboardHeader({
     const monthOptions = useMemo(() => {
         if (typeof window === "undefined") return [];
 
+        const now = new Date();
         const options = [];
         for (let i = 0; i < 12; i++) {
-            const date = subMonths(new Date(), i);
+            const date = subMonths(now, i);
             const value = format(date, "yyyy-MM");
             const label = format(date, "MMMM yyyy", { locale: ptBR });
             options.push({ value, label, date });

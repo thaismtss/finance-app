@@ -56,10 +56,14 @@ export function useDashboardCharts(startDate?: Date, endDate?: Date) {
 
     // Format data for Monthly Demonstrative & Profit Evolution
     const monthlyData = useMemo(() => {
-        // Safe check for SSR/Prerendering
-        if (typeof window === "undefined" || !transactions.length) return [];
+        // We need a stable base date for prerendering to avoid hydration mismatches
+        // and build errors. If startDate is not provided, we only use "now" on the client.
+        const baseDate = startDate || (typeof window !== "undefined" ? new Date() : new Date(2025, 0, 1));
 
-        const baseDate = startDate || new Date();
+        // If we're on the server and no startDate is provided, we can return empty to be safe
+        // or use the fixed year. Let's return empty if no transactions and no startDate to avoid mismatch.
+        if (typeof window === "undefined" && !startDate) return [];
+
         const months = eachMonthOfInterval({
             start: startOfYear(baseDate),
             end: endOfYear(baseDate),
@@ -85,11 +89,14 @@ export function useDashboardCharts(startDate?: Date, endDate?: Date) {
                 lucro: income - expenses,
             };
         });
-    }, [transactions]);
+    }, [transactions, startDate]);
 
     // Format data for Cash Flow (Monthly from Jan to Dec)
     const cashFlowData = useMemo(() => {
-        const baseDate = startDate || new Date();
+        const baseDate = startDate || (typeof window !== "undefined" ? new Date() : new Date(2025, 0, 1));
+
+        if (typeof window === "undefined" && !startDate) return [];
+
         const months = eachMonthOfInterval({
             start: startOfYear(baseDate),
             end: endOfYear(baseDate),
@@ -114,7 +121,7 @@ export function useDashboardCharts(startDate?: Date, endDate?: Date) {
                 saidas: expenses,
             };
         });
-    }, [transactions]);
+    }, [transactions, startDate]);
 
     // Format Data for Expenses by Category
     const expensesByCategoryData = useMemo(() => {
